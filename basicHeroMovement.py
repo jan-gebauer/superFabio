@@ -6,9 +6,9 @@ black = 0,0,0
 x = 200
 y = 150
 
-background_image = pygame.image.load("background.png").convert()
-
+background_image = pygame.image.load("background.png")
 hero = pygame.image.load("player.png")
+
 heroRect = hero.get_rect() #You have to make an object to move
 heroRect.x = x
 heroRect.y = y
@@ -53,7 +53,7 @@ while 1:
 	heroRect.x = x
 	heroRect.y = y
 	screen.fill(black) #Wipes the screen
-	screen.blit(background_image,[0,0])
+	screen.blit(backgroundImage,[0,0])
 	screen.blit(hero, heroRect) #Draws the actual image in the certain place
 	pygame.display.flip() #"Commits" the change
 	clock.tick(60)
