@@ -73,7 +73,6 @@ class Hero(pygame.sprite.Sprite):
 
 		if self.jump >= yAxis: #300 "units" is the height of the jump
 			self.prevY = self.y
-			#self.jump = 0
 
 	def draw(self, surface):
 		screen.blit(self.image, self.rect)
@@ -192,30 +191,39 @@ class Finished(pygame.sprite.Sprite):
 pygame.init()
 screen = pygame.display.set_mode((xAxis, yAxis))
 
-hero = Hero() 
-pipeOne = Pipe(150, (yFloor - 50) - 25)
-pipeTwo = Pipe(350, (yFloor - 50) - 50)
-pipeThree = Pipe(900, (yFloor - 50) + 25)
+hero = Hero()
 wall = InvisibleWall(xAxis/2, (yFloor - 50))
 finished = Finished(1400, yFloor - 300)
-lavaOne = Lava(600)
-coinOne = Coin(pipeOne.x + 11, (yFloor - 50) - 75) #X coordinate is 150 + 12 because 12 looks nice
-coinTwo = Coin(pipeTwo.x + 11, (yFloor - 50) - 100)
-coinThree = Coin(pipeTwo.x + 75, (yFloor - 50) + 5)
-coinFour = Coin(coinThree.x + 55, (yFloor - 50) + 5)
-coinFive = Coin(coinFour.x + 55, (yFloor - 50) + 5)
-coinSix = Coin(lavaOne.x + 75, (yFloor - 50) + 5)
-coinSeven = Coin(coinSix.x + 55, (yFloor - 50) + 5)
-coinEight = Coin(coinSeven.x + 55, (yFloor - 50) + 5)
-coinNine = Coin(coinEight.x + 55, (yFloor - 50) + 5)
-dalekOne = Dalek(200)
-dalekTwo = Dalek(500)
 
+numberOfdaleks = 2
+initialDalekx = [200, 500]
+daleksArray = []
+for c in range(numberOfdaleks):
+	daleksArray.append(Dalek(initialDalekx[c]))
 
-pipes = pygame.sprite.Group(pipeOne, pipeTwo, pipeThree)
-coins = pygame.sprite.Group(coinOne, coinTwo, coinThree, coinFour, coinFive, coinSix, coinSeven, coinEight, coinNine)
-daleks = pygame.sprite.Group(dalekOne, dalekTwo)
-lavas = pygame.sprite.Group(lavaOne)
+numberOflavas = 1
+initialLavax = [600]
+lavasArray = []
+for c in range(numberOflavas):
+	lavasArray.append(Lava(initialLavax[c]))
+
+numberOfpipes = 3
+initialPipex = [150, 300, 900]
+initialPipey = [(yFloor - 50) - 25, (yFloor - 50) - 50, (yFloor - 50) + 25]
+pipesArray = []
+for c in range(numberOfpipes):
+	pipesArray.append(Pipe(initialPipex[c], initialPipey[c]))
+
+numberOfcoins = 9
+initial_coin_x = [initialPipex[0] + 11, initialPipex[1] + 11, initialPipex[1] + 75, initialPipex[1] + 75 + 55,
+					initialPipex[1] + 75 + 55 + 55, initialLavax[0] + 75, initialLavax[0] + 75 + 55,
+					initialLavax[0] + 75 + 55 + 55, initialLavax[0] + 75 + 55 + 55 + 55]
+initial_coin_y = [(yFloor - 50) - 75, (yFloor - 50) - 100, (yFloor - 50) + 5, (yFloor - 50) + 5,
+					(yFloor - 50) + 5, (yFloor - 50) + 5, (yFloor - 50) + 5, (yFloor - 50) + 5,
+					(yFloor - 50) + 5]
+coinsArray = []
+for c in range(numberOfcoins):
+    coinsArray.append(Coin(initial_coin_x[c], initial_coin_y[c]))
 
 clock = pygame.time.Clock() #To get slower movement, you need a clock
 
@@ -228,21 +236,22 @@ while 1:
 				sys.exit()
 
 	#Collision detection with a specific pipe that is in the group pipes
-	collision = pygame.sprite.spritecollide(hero, pipes, False)
-	if collision:
-		if ((collision[0]).y - hero.y) < 55 and ((collision[0]).y - hero.y) > 45: #Y-axis barrier
-			hero.y -= dist
-			hero.rect.y -= dist
-			hero.jump = 0
+	for (i, c) in enumerate(pipesArray):
+		collisionHP = pygame.sprite.collide_rect(hero, c)
+		if collisionHP:
+			if (c.y - hero.y) < 55 and (c.y - hero.y) > 45: #Y-axis barrier
+				hero.y -= dist
+				hero.rect.y -= dist
+				hero.jump = 0
 		
 		#X-axis barriers, positive side needs limits because otherwise, the hero would slide back
-		elif ((collision[0]).x - hero.x) < 47 and ((collision[0]).x - hero.x) > 40:
-			hero.x -= dist
-			hero.rect.x -= dist
+			elif (c.x - hero.x) < 47 and (c.x - hero.x) > 40:
+				hero.x -= dist
+				hero.rect.x -= dist
 			
-		elif ((collision[0]).x - hero.x) < -45:
-			hero.x += dist
-			hero.rect.x += dist
+			elif (c.x - hero.x) < -45:
+				hero.x += dist
+				hero.rect.x += dist
 
 	#Collision with the invisible wall to create movement of the level
 	point = pygame.sprite.collide_mask(hero, wall)
@@ -256,27 +265,28 @@ while 1:
 		elif point[0] == 0:
 			hero.x += dist
 			hero.rect.x += dist
-		for i in pipes:
+		for i in pipesArray:
 			i.x -= dist
 			i.rect.x -= dist
-		for k in coins:
+		for k in coinsArray:
 			k.x -= dist
 			k.rect.x -= dist
-		for k in daleks:
+		for k in daleksArray:
 			k.x -= dist
 			k.rect.x -= dist
-		for k in lavas:
+		for k in lavasArray:
 			k.x -= dist
 			k.rect.x -= dist
 		finished.x -= dist
 		finished.rect.x -= dist
 
-	#Counts the number of coins
-	collection = pygame.sprite.spritecollide(hero, coins, False)
-	if collection:
-		if collection[0].full == True:
-			coinage += 1
-			collection[0].full = False
+	#Collision for the Hero and the coins
+	for (i, c) in enumerate(coinsArray):
+		collection = pygame.sprite.collide_rect(hero, c)
+		if collection:
+			if c.full == True:
+				coinage += 1
+				c.full = False
 
 	#Turns off the game once finish is reached
 	end = pygame.sprite.collide_mask(hero, finished)
@@ -287,49 +297,49 @@ while 1:
 		sys.exit()
 
 	#Ends the game once the hero steps on lava
-	deathLava = pygame.sprite.spritecollide(hero, lavas, False)
-	if deathLava:
-		print ('You died')
-		print ("Number of coins:", coinage)
-		print ('Your time:', time)
-		sys.exit()
+	for (i, c) in enumerate(lavasArray):
+		collisionHL = pygame.sprite.collide_rect(hero, c)
+		if collisionHL:
+			print ('You died')
+			print ("Number of coins:", coinage)
+			print ('Your time:', time)
+			sys.exit()
+
 
 	#Collision detection with a specific dalek that is in the group daleks
-	collision = pygame.sprite.spritecollide(hero, daleks, False)
-	if collision:
-		if ((collision[0]).y - hero.y) <= 48 and ((collision[0]).y - hero.y) > 45:
-			(collision[0]).y = 5000 #Just get it off the screen
-			(collision[0]).rect.y = 5000
-		
-		#X-axis barriers, positive side needs limits because otherwise, the hero would slide back
-		elif((collision[0]).x - hero.x) < 47 and ((collision[0]).x - hero.x) > 40:
-			print ('You died')
-			print ("Number of coins:", coinage)
-			print ('Your time:', time)
-			sys.exit()
-			
-		elif ((collision[0]).x - hero.x) < -45:
-			print ('You died')
-			print ("Number of coins:", coinage)
-			print ('Your time:', time)
-			sys.exit()
+	for (i, c) in enumerate(daleksArray):
+		collisionHD = pygame.sprite.collide_rect(hero, c)
+		if collisionHD:
+			if (c.y - hero.y) <= 48 and (c.y - hero.y) > 45:
+				c.y = 5000 #Just get it off the screen
+				c.rect.y = 5000
+			#X-axis barriers, positive side needs limits because otherwise, the hero would slide back
+			elif(c.x - hero.x) < 47 and (c.x - hero.x) > 40:
+				print ('You died')
+				print ("Number of coins:", coinage)
+				print ('Your time:', time)
+				sys.exit()
+			elif (c.x - hero.x) < -45:
+				print ('You died')
+				print ("Number of coins:", coinage)
+				print ('Your time:', time)
+				sys.exit()
 
 	#Collision between Pipes and Daleks
-	#The thing is a DICTIONARY, THIS IS IMPORTANT! READ THIS AND DON'T GET STUCK LIKE AN IDIOT
-	collisionPipesDaleks = pygame.sprite.groupcollide(daleks, pipes, False, False)
-	if collisionPipesDaleks:
-		for i in collisionPipesDaleks: #i is the dalek
-			for k in collisionPipesDaleks[i]: #k is the pipe
-				if (i.x - k.x) < 47 and (i.x - k.x) > 40:
-					i.x += dist
-					i.rect.x += dist
-					i.direction = True
-				if (i.x - k.x) < -47:
-					i.x -= dist
-					i.rect.x -= dist
-					i.direction = False
+	for (i, c) in enumerate(daleksArray):
+		for (k, d) in enumerate(pipesArray):
+			collisionPD = pygame.sprite.collide_rect(c,d)
+			if collisionPD:
+				if (c.x - d.x) < 47 and (c.x - d.x) > 40:
+					c.x += dist
+					c.rect.x += dist
+					c.direction = True
+				if (c.x - d.x) < -47:
+					c.x -= dist
+					c.rect.x -= dist
+					c.direction = False
 
-	for i in daleks:
+	for i in daleksArray:
 		i.dalekMove()
 	hero.handle_keys()
 
@@ -345,15 +355,15 @@ while 1:
 	screen.blit(backgroundImage,[0,0])
 	hero.draw(screen)
 	finished.finDraw(screen)
-	for k in pipes:
+	for k in pipesArray:
 		k.pipeDraw(screen)
-	for k in coins:
+	for k in coinsArray:
 		k.coinDraw(screen)
-	for k in daleks:
+	for k in daleksArray:
 		k.dalekDraw(screen)
 	screen.blit(floorImage, [0,yFloor])
 	screen.blit(floorImage, [400,yFloor])
-	for k in lavas:
+	for k in lavasArray:
 		k.lavaDraw(screen)
 	pygame.display.update()
 	clock.tick(60)
