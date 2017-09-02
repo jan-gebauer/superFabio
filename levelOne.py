@@ -26,6 +26,7 @@ xAxis = 800
 yAxis = 400
 heroHeight = 50
 yFloor = yAxis - 3*heroHeight
+gravity = 3
 
 class Hero(pygame.sprite.Sprite):
 	def __init__(self, x = xAxis/10, y = yFloor - 50):
@@ -63,13 +64,13 @@ class Hero(pygame.sprite.Sprite):
 
 		if self.jump > 0 and self.jump < yAxis/2:
 			self.prevY = self.y
-			self.y -= 6 #2*gravity is the speed of the jump, arbitrary
-			self.rect.y -= 6
-			self.jump += 6
+			self.y -= 2*gravity #2*gravity is the speed of the jump, arbitrary
+			self.rect.y -= 2*gravity
+			self.jump += 2*gravity
 
 		if self.jump > yAxis - 1 and self.jump < yAxis:
 			self.prevY = self.y
-			self.jump += 6
+			self.jump += 2*gravity
 
 		if self.jump >= yAxis: #300 "units" is the height of the jump
 			self.prevY = self.y
@@ -239,17 +240,19 @@ while 1:
 	for (i, c) in enumerate(pipesArray):
 		collisionHP = pygame.sprite.collide_rect(hero, c)
 		if collisionHP:
-			if (c.y - hero.y) < 55 and (c.y - hero.y) > 45: #Y-axis barrier
+			#print (c.y - hero.y)
+			print (c.x - hero.x)
+			if (c.y - hero.y) < 50 and (c.y - hero.y) > 46 and (c.x - hero.x) < 49: #Y-axis barrier
 				hero.y -= dist
 				hero.rect.y -= dist
 				hero.jump = 0
 		
-		#X-axis barriers, positive side needs limits because otherwise, the hero would slide back
-			elif (c.x - hero.x) < 47 and (c.x - hero.x) > 40:
+			#X-axis barriers, positive side needs limits because otherwise, the hero would slide back
+			elif (c.x - hero.x) <= 50 and (c.x - hero.x) > 45:
 				hero.x -= dist
 				hero.rect.x -= dist
 			
-			elif (c.x - hero.x) < -45:
+			elif (c.x - hero.x) <= -47:
 				hero.x += dist
 				hero.rect.x += dist
 
@@ -345,8 +348,8 @@ while 1:
 
 	#Gravity for the hero
 	if hero.y < (yFloor - 50):
-		hero.y += dist
-		hero.rect.y += dist
+		hero.y += gravity
+		hero.rect.y += gravity
 	if hero.y == (yFloor - 50):
 		hero.jump = 0
 
