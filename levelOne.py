@@ -6,6 +6,7 @@ backgroundImage = pygame.image.load("background.png")
 floorImage = pygame.image.load("floor.png")
 heroImage = os.path.join("D:\skola\Programovani\Python\superFabio", "player.png")
 pipeImage = os.path.join("D:\skola\Programovani\Python\superFabio", "pipe.png")
+platformImage = os.path.join("D:\skola\Programovani\Python\superFabio", "platform.png")
 wallImage = os.path.join("D:\skola\Programovani\Python\superFabio", "invisWall.png")
 finishOne = os.path.join("D:\skola\Programovani\Python\superFabio", "finish1.png")
 finishTwo = os.path.join("D:\skola\Programovani\Python\superFabio", "finish2.png")
@@ -79,7 +80,7 @@ class Hero(pygame.sprite.Sprite):
 		screen.blit(self.image, self.rect)
 
 class Dalek(pygame.sprite.Sprite):
-	def __init__(self, x, y = yFloor - 50):
+	def __init__(self, x, y):
 		pygame.sprite.Sprite.__init__(self)
 		self.image = pygame.image.load(dalekOneImage)
 		self.rect = self.image.get_rect()
@@ -124,6 +125,32 @@ class Pipe(pygame.sprite.Sprite):
 		self.rect.y = y
 
 	def pipeDraw(self, surface):
+		screen.blit(self.image, self.rect)
+
+class InvisiblePipe(pygame.sprite.Sprite): 
+	def __init__(self, x, y):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = pygame.image.load(pipeImage)
+		self.rect = self.image.get_rect()
+		self.x = x
+		self.y = y
+		self.rect.x = x
+		self.rect.y = y
+
+	def invisiblePipedraw(self, surface):
+		screen.blit(self.image, self.rect)
+
+class Platform(pygame.sprite.Sprite):
+	def __init__(self,x,y):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = pygame.image.load(platformImage)
+		self.rect = self.image.get_rect()
+		self.x = x
+		self.y = y
+		self.rect.x = x
+		self.rect.y = y
+
+	def platformDraw(self, surface):
 		screen.blit(self.image, self.rect)
 
 class Lava(pygame.sprite.Sprite): 
@@ -194,13 +221,14 @@ screen = pygame.display.set_mode((xAxis, yAxis))
 
 hero = Hero()
 wall = InvisibleWall(xAxis/2, (yFloor - 50))
-finished = Finished(1400, yFloor - 300)
+finished = Finished(2000, yFloor - 300)
 
-numberOfdaleks = 2
-initialDalekx = [200, 500]
+numberOfdaleks = 3
+initialDalekx = [200, 500, 1025]
+initialDaleky = [(yFloor - 50),(yFloor - 50),(yFloor - 50) - 125]
 daleksArray = []
 for c in range(numberOfdaleks):
-	daleksArray.append(Dalek(initialDalekx[c]))
+	daleksArray.append(Dalek(initialDalekx[c], initialDaleky[c]))
 
 numberOflavas = 1
 initialLavax = [600]
@@ -215,13 +243,30 @@ pipesArray = []
 for c in range(numberOfpipes):
 	pipesArray.append(Pipe(initialPipex[c], initialPipey[c]))
 
-numberOfcoins = 9
+numberOfplatforms = 2
+initialPlatformx = [1000, 1300]
+initialPlatformy = [(yFloor - 125), (yFloor - 150)]
+platformsArray = []
+for c in range(numberOfplatforms):
+	platformsArray.append(Platform(initialPlatformx[c], initialPlatformy[c]))
+
+numberOfinivisiblePipes = 2
+initialInvisiblepipeX = [950, 1200]
+initialInvisiblepipeY = [(yFloor - 175), (yFloor - 175)]
+inivisiblePipesarray = []
+for c in range(numberOfinivisiblePipes):
+	inivisiblePipesarray.append(InvisiblePipe(initialInvisiblepipeX[c], initialInvisiblepipeY[c]))
+
+numberOfcoins = 15
 initial_coin_x = [initialPipex[0] + 11, initialPipex[1] + 11, initialPipex[1] + 75, initialPipex[1] + 75 + 55,
 					initialPipex[1] + 75 + 55 + 55, initialLavax[0] + 75, initialLavax[0] + 75 + 55,
-					initialLavax[0] + 75 + 55 + 55, initialLavax[0] + 75 + 55 + 55 + 55]
+					initialLavax[0] + 75 + 55 + 55, initialLavax[0] + 75 + 55 + 55 + 55, initialPlatformx[0] + 24,
+					initialPlatformx[0] + 24 + 55, initialPlatformx[0] + 24 + 55 + 55, initialPlatformx[1] + 24,
+					initialPlatformx[1] + 24 + 55, initialPlatformx[1] + 24 + 55 + 55]
 initial_coin_y = [(yFloor - 50) - 75, (yFloor - 50) - 100, (yFloor - 50) + 5, (yFloor - 50) + 5,
 					(yFloor - 50) + 5, (yFloor - 50) + 5, (yFloor - 50) + 5, (yFloor - 50) + 5,
-					(yFloor - 50) + 5]
+					(yFloor - 50) + 5, (yFloor - 200) + 25, (yFloor - 200) + 25, (yFloor - 200) + 25,
+					(yFloor - 200), (yFloor - 200), (yFloor - 200)]
 coinsArray = []
 for c in range(numberOfcoins):
     coinsArray.append(Coin(initial_coin_x[c], initial_coin_y[c]))
@@ -240,13 +285,33 @@ while 1:
 	for (i, c) in enumerate(pipesArray):
 		collisionHP = pygame.sprite.collide_rect(hero, c)
 		if collisionHP:
-			#print (c.y - hero.y)
-			print (c.x - hero.x)
 			if (c.y - hero.y) < 50 and (c.y - hero.y) > 46 and (c.x - hero.x) < 49: #Y-axis barrier
 				hero.y -= dist
 				hero.rect.y -= dist
 				hero.jump = 0
 		
+			#X-axis barriers, positive side needs limits because otherwise, the hero would slide back
+			elif (c.x - hero.x) <= 50 and (c.x - hero.x) > 45:
+				hero.x -= dist
+				hero.rect.x -= dist
+			
+			elif (c.x - hero.x) <= -47:
+				hero.x += dist
+				hero.rect.x += dist
+
+	#Collision detection with a specific platform that is in the group platforms
+	for (i, c) in enumerate(platformsArray):
+		collisionHP = pygame.sprite.collide_rect(hero, c)
+		if collisionHP:
+			#print (c.y - hero.y)
+			if (c.y - hero.y) < 50 and (c.y - hero.y) > 46 and (c.x - hero.x) < 49: #Y-axis barrier
+				hero.y -= dist
+				hero.rect.y -= dist
+				hero.jump = 0
+			elif (c.y - hero.y) < 0:
+				hero.y += dist
+				hero.rect.y += dist
+
 			#X-axis barriers, positive side needs limits because otherwise, the hero would slide back
 			elif (c.x - hero.x) <= 50 and (c.x - hero.x) > 45:
 				hero.x -= dist
@@ -269,6 +334,12 @@ while 1:
 			hero.x += dist
 			hero.rect.x += dist
 		for i in pipesArray:
+			i.x -= dist
+			i.rect.x -= dist
+		for i in inivisiblePipesarray:
+			i.x -= dist
+			i.rect.x -= dist
+		for i in platformsArray:
 			i.x -= dist
 			i.rect.x -= dist
 		for k in coinsArray:
@@ -342,6 +413,20 @@ while 1:
 					c.rect.x -= dist
 					c.direction = False
 
+	#Collision between Invisible Pipes and Daleks
+	for (i, c) in enumerate(daleksArray):
+		for (k, d) in enumerate(inivisiblePipesarray):
+			collisionPD = pygame.sprite.collide_rect(c,d)
+			if collisionPD:
+				if (c.x - d.x) < 47 and (c.x - d.x) > 40:
+					c.x += dist
+					c.rect.x += dist
+					c.direction = True
+				if (c.x - d.x) < -47:
+					c.x -= dist
+					c.rect.x -= dist
+					c.direction = False
+
 	for i in daleksArray:
 		i.dalekMove()
 	hero.handle_keys()
@@ -352,14 +437,17 @@ while 1:
 		hero.rect.y += gravity
 	if hero.y == (yFloor - 50):
 		hero.jump = 0
+	if hero.y <= 0:
+		hero.y += gravity
+		hero.rect.y += gravity
 
 	#Bliting
 	screen.fill(black)
-	screen.blit(backgroundImage,[0,0])
-	hero.draw(screen)
 	finished.finDraw(screen)
 	for k in pipesArray:
 		k.pipeDraw(screen)
+	for k in platformsArray:
+		k.platformDraw (screen)
 	for k in coinsArray:
 		k.coinDraw(screen)
 	for k in daleksArray:
@@ -368,6 +456,7 @@ while 1:
 	screen.blit(floorImage, [400,yFloor])
 	for k in lavasArray:
 		k.lavaDraw(screen)
+	hero.draw(screen)
 	pygame.display.update()
 	clock.tick(60)
 	time += 1
