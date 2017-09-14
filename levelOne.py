@@ -26,7 +26,7 @@ time = 0
 xAxis = 800
 yAxis = 400
 heroHeight = 50
-yFloor = yAxis - 3*heroHeight
+yFloor = yAxis - 1*heroHeight
 gravity = 3
 
 class Hero(pygame.sprite.Sprite):
